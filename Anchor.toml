@@ -1,0 +1,18 @@
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.localnet]
+p2swap="p2sSQ51hNP1yiQKtZ81sDzWBM6tkaS2ZtMrgnbBhE4v"
+
+[[test.genesis]]
+address = "p2sSQ51hNP1yiQKtZ81sDzWBM6tkaS2ZtMrgnbBhE4v"
+program = "target/deploy/p2swap.so"
+
+[workspace]
+members = [
+  "program",
+]
