@@ -5,7 +5,7 @@ use anchor_lang::{
 };
 
 pub const ORDER_ESCROW_PREFIX: &str = "p2s_order_escrow";
-pub const ORDER_ESCROW_NATIVE_SIZE: usize = 1;
+pub const ORDER_ESCROW_NATIVE_SIZE: usize = 8 + 1;
 
 /// Return `Order` tokens escrow `Pubkey` and bump seed.
 pub fn find_order_escrow_address(funder_wallet: &Pubkey, order: &Pubkey) -> (Pubkey, u8) {
@@ -17,6 +17,34 @@ pub fn find_order_escrow_address(funder_wallet: &Pubkey, order: &Pubkey) -> (Pub
         ],
         &id(),
     )
+}
+
+/// Move lamports from `src` to `dst` account.
+#[inline(always)]
+pub fn move_lamports<'a>(
+    src: &AccountInfo<'a>,
+    dst: &AccountInfo<'a>,
+    lamports: u64,
+) -> Result<()> {
+    let mut src_lamports = src.try_borrow_mut_lamports()?;
+    let mut dst_lamports = dst.try_borrow_mut_lamports()?;
+
+    **src_lamports -= lamports;
+    **dst_lamports += lamports;
+
+    Ok(())
+}
+
+/// Delete `target` account, transfer all lamports to `receiver`.
+#[inline(always)]
+pub fn delete_account<'a>(target: &AccountInfo<'a>, receiver: &AccountInfo<'a>) -> Result<()> {
+    let mut target_lamports = target.try_borrow_mut_lamports()?;
+    let mut receiver_lamports = receiver.try_borrow_mut_lamports()?;
+
+    **receiver_lamports += **target_lamports;
+    **target_lamports = 0;
+
+    Ok(())
 }
 
 /// Wrapper of `transfer` instruction from `system_program` program.

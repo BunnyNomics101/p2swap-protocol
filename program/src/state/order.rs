@@ -7,6 +7,8 @@ pub enum OrderStatus {
     Completed,
 }
 
+/// TODO: Provide docs.
+
 #[account]
 pub struct Order {
     pub status: OrderStatus,

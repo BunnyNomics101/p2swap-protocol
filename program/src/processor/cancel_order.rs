@@ -16,16 +16,9 @@ impl<'info> CancelOrder<'info> {
                 return Err(error::ErrorCode::FunderAccountWalletMismatch.into());
             }
 
-            utils::sys_transfer(
+            utils::delete_account(
                 &self.escrow.to_account_info(),
-                &self.funder_token_account.to_account_info(),
-                self.escrow.lamports(),
-                &[
-                    utils::ORDER_ESCROW_PREFIX.as_bytes(),
-                    self.funder.key.as_ref(),
-                    self.order.key().as_ref(),
-                    &[escrow_bump],
-                ],
+                &self.funder.to_account_info(),
             )?;
         } else {
             // Transfer `funder` tokens from `escrow`

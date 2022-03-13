@@ -43,16 +43,10 @@ impl<'info> ExecuteOrder<'info> {
                 return Err(error::ErrorCode::RecipientReceiveAccountWalletMismatch.into());
             }
 
-            utils::sys_transfer(
+            utils::move_lamports(
                 &self.escrow.to_account_info(),
                 &self.recipient_receive_token_account.to_account_info(),
                 self.order.base_amount,
-                &[
-                    utils::ORDER_ESCROW_PREFIX.as_bytes(),
-                    self.order.funder.as_ref(),
-                    self.order.key().as_ref(),
-                    &[escrow_bump],
-                ],
             )?;
         } else {
             let order_key = self.order.key();
@@ -76,16 +70,9 @@ impl<'info> ExecuteOrder<'info> {
 
         // Delete `escrow` account
         if self.order.is_base_native {
-            utils::sys_transfer(
+            utils::delete_account(
                 &self.escrow.to_account_info(),
                 &self.funder.to_account_info(),
-                self.escrow.lamports(),
-                &[
-                    utils::ORDER_ESCROW_PREFIX.as_bytes(),
-                    self.order.funder.as_ref(),
-                    self.order.key().as_ref(),
-                    &[escrow_bump],
-                ],
             )?;
         } else {
             let order_key = self.order.key();

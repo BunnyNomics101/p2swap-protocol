@@ -22,7 +22,7 @@ impl<'info> CreateOrder<'info> {
         self.order.funder = self.funder.key.clone();
         self.order.recipient = self.recipient.key.clone();
 
-        self.order.escrow = self.escrow.key.clone();
+        self.order.escrow = self.escrow.key().clone();
         self.order.quote_token_account = self.quote_token_account.key.clone();
 
         self.order.start_date = start_date;
