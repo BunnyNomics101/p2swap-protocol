@@ -93,8 +93,8 @@ async fn success_native() {
     assert_eq!(order.escrow, escrow);
     assert_eq!(order.quote_token_account, funder.pubkey());
     assert!(order.start_date.is_none());
-    assert!(order.is_base_native);
-    assert!(order.is_quote_native);
+    assert!(order.is_base_native());
+    assert!(order.is_quote_native());
     assert_eq!(order.expire_date, expire_date);
     assert_eq!(order.status, p2swap::state::OrderStatus::Created);
 }
@@ -203,8 +203,8 @@ async fn success_spl_token() {
     assert_eq!(order.escrow, escrow);
     assert_eq!(order.quote_token_account, funder.pubkey());
     assert!(order.start_date.is_none());
-    assert!(!order.is_base_native);
-    assert!(order.is_quote_native);
+    assert!(!order.is_base_native());
+    assert!(order.is_quote_native());
     assert_eq!(order.expire_date, expire_date);
     assert_eq!(order.status, p2swap::state::OrderStatus::Created);
 }

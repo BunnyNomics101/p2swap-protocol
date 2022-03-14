@@ -8,6 +8,7 @@ pub enum OrderStatus {
 }
 
 #[account]
+#[derive(Debug)]
 pub struct Order {
     /// Current `Order` status.
     pub status: OrderStatus,
@@ -18,11 +19,11 @@ pub struct Order {
     /// Amount, that will be sended by `recipient`.
     pub quote_amount: u64,
 
-    /// Indicate, that `base_amount` will be sended in native `SOL`'s.
-    pub is_base_native: bool,
+    /// Indicate `escrow` mint.
+    pub base_mint: Pubkey,
 
-    /// Indicate, that `quote_amount` will be sended in native `SOL`'s.
-    pub is_quote_native: bool,
+    /// Indicate `quote_token_account` mint.
+    pub quote_mint: Pubkey,
 
     /// Creator, swap initiator.
     pub funder: Pubkey,
@@ -45,5 +46,13 @@ pub struct Order {
 }
 
 impl Order {
-    pub const LEN: usize = 8 + 1 + 8 + 8 + 1 + 1 + 32 + 32 + 32 + 32 + 9 + 8;
+    pub const LEN: usize = 8 + 1 + 8 + 8 + 32 + 32 + 32 + 32 + 32 + 32 + 9 + 8;
+
+    pub fn is_base_native(&self) -> bool {
+        self.base_mint == System::id()
+    }
+
+    pub fn is_quote_native(&self) -> bool {
+        self.quote_mint == System::id()
+    }
 }

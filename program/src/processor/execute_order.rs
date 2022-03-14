@@ -15,7 +15,7 @@ impl<'info> ExecuteOrder<'info> {
         // instruction
 
         // Transfer funds from `recipient` to `funder` (`quote_token_account`).
-        if self.order.is_quote_native {
+        if self.order.is_quote_native() {
             if self.recipient_token_account.key != self.recipient.key {
                 return Err(error::ErrorCode::RecipientAccountWalletMismatch.into());
             }
@@ -38,7 +38,7 @@ impl<'info> ExecuteOrder<'info> {
         }
 
         // Transfer funds from `escrow` to `recipient` (`recipient_receive_token_account`).
-        if self.order.is_base_native {
+        if self.order.is_base_native() {
             if self.recipient_receive_token_account.key != self.recipient.key {
                 return Err(error::ErrorCode::RecipientReceiveAccountWalletMismatch.into());
             }
@@ -69,7 +69,7 @@ impl<'info> ExecuteOrder<'info> {
         }
 
         // Delete `escrow` account
-        if self.order.is_base_native {
+        if self.order.is_base_native() {
             utils::delete_account(
                 &self.escrow.to_account_info(),
                 &self.funder.to_account_info(),

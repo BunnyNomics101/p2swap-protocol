@@ -16,8 +16,8 @@ impl<'info> CreateOrder<'info> {
         self.order.base_amount = base_amount;
         self.order.quote_amount = quote_amount;
 
-        self.order.is_base_native = self.escrow_mint.key == &System::id();
-        self.order.is_quote_native = self.quote_mint.key == &System::id();
+        self.order.base_mint = self.escrow_mint.key.clone();
+        self.order.quote_mint = self.quote_mint.key.clone();
 
         self.order.funder = self.funder.key.clone();
         self.order.recipient = self.recipient.key.clone();
@@ -33,7 +33,7 @@ impl<'info> CreateOrder<'info> {
         }
 
         // Create escrow account according to `funder` mint
-        if self.order.is_base_native {
+        if self.order.is_base_native() {
             if self.funder_token_account.key != self.funder.key {
                 return Err(error::ErrorCode::FunderAccountWalletMismatch.into());
             }
@@ -100,7 +100,7 @@ impl<'info> CreateOrder<'info> {
         }
 
         // Check if quote token account is valid in native `SOL` context
-        if self.order.is_quote_native && self.quote_token_account.key() != self.funder.key() {
+        if self.order.is_quote_native() && self.quote_token_account.key() != self.funder.key() {
             return Err(error::ErrorCode::QuoteAccountWalletMismatch.into());
         }
 

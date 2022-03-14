@@ -1,6 +1,9 @@
 [workspace]
 
 members = [
-    "cli",
     "program"   
+]
+
+exclude = [
+    "cli"
 ]

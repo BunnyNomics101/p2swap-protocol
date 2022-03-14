@@ -15,3 +15,4 @@ Cargo.lock
 
 # Env
 keypair.json
+.DS_Store

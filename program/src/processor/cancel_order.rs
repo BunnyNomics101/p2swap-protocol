@@ -11,7 +11,7 @@ impl<'info> CancelOrder<'info> {
         self.order.status = state::OrderStatus::Canceled;
 
         // Delete `escrow` account
-        if self.order.is_base_native {
+        if self.order.is_base_native() {
             if self.funder_token_account.key != self.funder.key {
                 return Err(error::ErrorCode::FunderAccountWalletMismatch.into());
             }
