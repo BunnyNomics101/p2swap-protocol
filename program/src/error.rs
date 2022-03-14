@@ -37,4 +37,8 @@ pub enum ErrorCode {
     /// 6008.
     #[msg("Invalid order status")]
     InvalidOrderStatus,
+
+    /// 6009.
+    #[msg("Recipient should not match funder")]
+    RecipientMatchFunder,
 }

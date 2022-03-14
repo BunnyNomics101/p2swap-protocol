@@ -497,3 +497,75 @@ async fn fail_expire_date_in_the_past() {
     }
     assert_eq!(true, false);
 }
+
+#[tokio::test]
+async fn fail_recipient_match_funder() {
+    let mut context = utils::setup_test_context().await;
+
+    let order = Keypair::new();
+    let funder = Keypair::new();
+    let recipient = Keypair::new();
+
+    let base_amount = 10 * 10u64.pow(9);
+    let quote_amount = 11 * 10u64.pow(9);
+    let expire_date = 9999999999;
+
+    utils::airdrop(&mut context, &funder.pubkey(), base_amount * 2).await;
+    utils::airdrop(&mut context, &recipient.pubkey(), quote_amount * 2).await;
+
+    let (escrow, escrow_bump) =
+        p2swap::utils::find_order_escrow_address(&funder.pubkey(), &order.pubkey());
+
+    let accounts = p2swap::accounts::CreateOrder {
+        order: order.pubkey(),
+        funder: funder.pubkey(),
+        recipient: funder.pubkey(),
+        funder_token_account: funder.pubkey(),
+        escrow,
+        quote_token_account: funder.pubkey(),
+        escrow_mint: System::id(),
+        quote_mint: System::id(),
+        rent_sysvar: sysvar::rent::id(),
+        clock_sysvar: sysvar::clock::id(),
+        token_program: spl_token::id(),
+        system_program: System::id(),
+    }
+    .to_account_metas(None);
+
+    let data = p2swap::instruction::CreateOrder {
+        escrow_bump,
+        base_amount,
+        quote_amount,
+        start_date: None,
+        expire_date,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: p2swap::id(),
+        data,
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&funder.pubkey()),
+        &[&funder, &order],
+        context.last_blockhash,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    let error_code = utils::get_error_code(error);
+    if let Some(error_code) = error_code {
+        if error_code == 6009 {
+            assert_eq!(true, true);
+            return;
+        }
+    }
+    assert_eq!(true, false);
+}

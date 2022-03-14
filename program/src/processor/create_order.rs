@@ -28,7 +28,11 @@ impl<'info> CreateOrder<'info> {
         self.order.start_date = start_date;
         self.order.expire_date = expire_date;
 
-        // Check if escrow is denominated in native `SOL`'s
+        if self.funder.key == self.recipient.key {
+            return Err(error::ErrorCode::RecipientMatchFunder.into());
+        }
+
+        // Create escrow account according to `funder` mint
         if self.order.is_base_native {
             if self.funder_token_account.key != self.funder.key {
                 return Err(error::ErrorCode::FunderAccountWalletMismatch.into());
