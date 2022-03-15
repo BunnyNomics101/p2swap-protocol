@@ -1,55 +1,61 @@
+//! Module provide CLI arguments parser.
+
 use clap::{Parser, Subcommand};
 use solana_sdk::pubkey::Pubkey;
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     CreateOrder {
-        #[clap(long)]
+        #[clap(long, help = "recipient address")]
         recipient: Pubkey,
 
-        #[clap(short, long)]
+        #[clap(short, long, help = "funder token account address")]
         token_account: Option<Pubkey>,
 
-        #[clap(short, long)]
+        #[clap(short, long, help = "funder token account address for receiving")]
         quote_token_account: Option<Pubkey>,
 
-        #[clap(short, long)]
+        #[clap(short, long, help = "mint for funder tokens")]
         base_mint: Option<Pubkey>,
 
-        #[clap(long)]
+        #[clap(long, help = "mint for recipient tokens")]
         quote_mint: Option<Pubkey>,
 
-        #[clap(long)]
+        #[clap(long, help = "funder tokens amount")]
         base_amount: f64,
 
-        #[clap(long)]
+        #[clap(long, help = "recipient tokens amount")]
         quote_amount: f64,
 
-        #[clap(long)]
+        #[clap(long, help = "order start date")]
         start_date: Option<i64>,
 
-        #[clap(long)]
+        #[clap(long, help = "order expiration date")]
         expire_date: Option<i64>,
     },
     CancelOrder {
-        #[clap(short, long)]
+        #[clap(short, long, help = "order address")]
         order: Pubkey,
 
-        #[clap(short, long)]
+        #[clap(
+            short,
+            long,
+            help = "funder token account address for escrow tokens receiving"
+        )]
         token_account: Option<Pubkey>,
     },
     ExecuteOrder {
-        #[clap(short, long)]
+        #[clap(short, long, help = "order address")]
         order: Pubkey,
 
-        #[clap(short, long)]
+        #[clap(short, long, help = "signer token account address")]
         token_account: Option<Pubkey>,
 
-        #[clap(short, long)]
+        #[clap(short, long, help = "signer token account address for receive")]
         receive_token_account: Option<Pubkey>,
     },
     GetOrder {
-        #[clap(short, long)]
+        #[clap(short, long, help = "order address")]
         order: Pubkey,
     },
 }

@@ -1,19 +1,23 @@
+//! Module provide `CancelOrder` instruction handler.
+
+use crate::error;
 use anchor_client::anchor_lang::{Id, InstructionData, System, ToAccountMetas};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     instruction::Instruction,
     pubkey::Pubkey,
+    signature::Signature,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
-use std::error;
 
+/// Handler.
 pub fn cancel_order(
     client: &RpcClient,
     wallet: &Keypair,
     order: &Pubkey,
     token_account: &Pubkey,
-) -> Result<(), Box<dyn error::Error>> {
+) -> Result<Signature, error::Error> {
     let (escrow, escrow_bump) = p2swap::utils::find_order_escrow_address(&wallet.pubkey(), order);
 
     let accounts = p2swap::accounts::CancelOrder {
@@ -43,7 +47,5 @@ pub fn cancel_order(
         last_blockhash,
     );
 
-    client.send_and_confirm_transaction(&tx)?;
-
-    Ok(())
+    Ok(client.send_and_confirm_transaction(&tx)?)
 }

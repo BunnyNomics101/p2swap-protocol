@@ -1,3 +1,5 @@
+//! Module provide handlers for `p2swap` program instructions.
+
 mod cancel_order;
 mod create_order;
 mod execute_order;

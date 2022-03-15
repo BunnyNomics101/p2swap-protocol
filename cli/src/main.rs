@@ -1,21 +1,24 @@
 mod args;
+mod error;
 mod processor;
 mod utils;
 
 use anchor_client::anchor_lang::{Id, System};
 use chrono::Utc;
 use clap::Parser;
+use indicatif;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{signature::read_keypair_file, signer::Signer};
-use std::{env, error};
+use std::{env, time::Duration};
 
-fn main() -> Result<(), Box<dyn error::Error>> {
+fn main() -> Result<(), error::Error> {
     let args = args::Args::parse();
 
     let wallet = read_keypair_file(args.wallet.unwrap_or(format!(
         "{}/.config/solana/id.json",
         env::var("HOME").unwrap()
-    )))?;
+    )))
+    .unwrap();
 
     let client = RpcClient::new(
         args.url
@@ -24,8 +27,42 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     match args.command {
         args::Commands::GetOrder { order } => {
+            let pb = indicatif::ProgressBar::new_spinner();
+            pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
+            pb.set_message("Creating order..");
+
             let order = utils::get_order(&client, &order)?;
-            println!("{:#?}", order);
+
+            pb.finish_and_clear();
+
+            let base_decimals = if order.is_base_native() {
+                9
+            } else {
+                utils::get_mint(&client, &order.base_mint)?.decimals
+            };
+            let quote_decimals = if order.is_quote_native() {
+                9
+            } else {
+                utils::get_mint(&client, &order.quote_mint)?.decimals
+            };
+
+            println!("status: {:?}", order.status);
+            println!(
+                "base_amount: {}",
+                spl_token::amount_to_ui_amount(order.base_amount, base_decimals)
+            );
+            println!(
+                "quote_amount: {}",
+                spl_token::amount_to_ui_amount(order.quote_amount, quote_decimals)
+            );
+            println!("base_mint: {}", order.base_mint);
+            println!("quote_mint: {}", order.quote_mint);
+            println!("funder: {}", order.funder);
+            println!("recipient: {}", order.recipient);
+            println!("escrow: {}", order.escrow);
+            println!("quote_token_account: {}", order.quote_token_account);
+            println!("start_date: {:?}", order.start_date);
+            println!("expire_date: {}", order.expire_date);
         }
         args::Commands::CreateOrder {
             recipient,
@@ -52,9 +89,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 mint.decimals
             };
 
-            let last_time = Utc::now();
+            let pb = indicatif::ProgressBar::new_spinner();
+            pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
+            pb.set_message("Creating order..");
 
-            let order = processor::create_order(
+            let (order_pubkey, tx) = processor::create_order(
                 &client,
                 &wallet,
                 &recipient,
@@ -66,36 +105,48 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 spl_token::ui_amount_to_amount(quote_amount, quote_decimals),
                 start_date,
                 expire_date.unwrap_or(
-                    last_time
+                    Utc::now()
                         .checked_add_signed(chrono::Duration::hours(1))
                         .unwrap()
                         .timestamp(),
                 ),
             )?;
 
-            println!("[+] New order: {}", order);
+            pb.finish_and_clear();
+
+            println!("[+] New order: {}, tx: {}", order_pubkey, tx);
         }
         args::Commands::CancelOrder {
             order,
             token_account,
         } => {
-            processor::cancel_order(
+            let pb = indicatif::ProgressBar::new_spinner();
+            pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
+            pb.set_message("Canceling order..");
+
+            let tx = processor::cancel_order(
                 &client,
                 &wallet,
                 &order,
                 &token_account.unwrap_or(wallet.pubkey()),
             )?;
 
-            println!("[+] Order canceled");
+            pb.finish_and_clear();
+
+            println!("[+] Order canceled, tx: {}", tx);
         }
         args::Commands::ExecuteOrder {
             order,
             token_account,
             receive_token_account,
         } => {
+            let pb = indicatif::ProgressBar::new_spinner();
+            pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
+            pb.set_message("Executing order..");
+
             let order_state = utils::get_order(&client, &order)?;
 
-            processor::execute_order(
+            let tx = processor::execute_order(
                 &client,
                 &wallet,
                 &order,
@@ -105,7 +156,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 &order_state.quote_token_account,
             )?;
 
-            println!("[+] Order executed");
+            pb.finish_and_clear();
+
+            println!("[+] Order executed, tx: {}", tx);
         }
     }
 

@@ -1,14 +1,18 @@
+//! Module provide `CreateOrder` instruction handler.
+
+use crate::error;
 use anchor_client::anchor_lang::{Id, InstructionData, System, ToAccountMetas};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     instruction::Instruction,
     pubkey::Pubkey,
+    signature::Signature,
     signature::{Keypair, Signer},
     sysvar,
     transaction::Transaction,
 };
-use std::error;
 
+/// Handler.
 pub fn create_order(
     client: &RpcClient,
     wallet: &Keypair,
@@ -21,7 +25,7 @@ pub fn create_order(
     quote_amount: u64,
     start_date: Option<i64>,
     expire_date: i64,
-) -> Result<Pubkey, Box<dyn error::Error>> {
+) -> Result<(Pubkey, Signature), error::Error> {
     let order = Keypair::new();
 
     let (escrow, escrow_bump) =
@@ -67,7 +71,7 @@ pub fn create_order(
         last_blockhash,
     );
 
-    client.send_and_confirm_transaction(&tx)?;
+    let signature = client.send_and_confirm_transaction(&tx)?;
 
-    Ok(order.pubkey())
+    Ok((order.pubkey(), signature))
 }

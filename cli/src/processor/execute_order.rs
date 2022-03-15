@@ -1,14 +1,18 @@
+//! Module provide `ExecuteOrder` instruction handler.
+
+use crate::error;
 use anchor_client::anchor_lang::{Id, InstructionData, System, ToAccountMetas};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     instruction::Instruction,
     pubkey::Pubkey,
+    signature::Signature,
     signature::{Keypair, Signer},
     sysvar,
     transaction::Transaction,
 };
-use std::error;
 
+/// Handler.
 pub fn execute_order(
     client: &RpcClient,
     wallet: &Keypair,
@@ -17,8 +21,8 @@ pub fn execute_order(
     token_account: &Pubkey,
     receive_token_account: &Pubkey,
     quote_token_account: &Pubkey,
-) -> Result<(), Box<dyn error::Error>> {
-    let (escrow, escrow_bump) = p2swap::utils::find_order_escrow_address(&wallet.pubkey(), order);
+) -> Result<Signature, error::Error> {
+    let (escrow, escrow_bump) = p2swap::utils::find_order_escrow_address(funder, order);
 
     let accounts = p2swap::accounts::ExecuteOrder {
         order: order.clone(),
@@ -51,7 +55,5 @@ pub fn execute_order(
         last_blockhash,
     );
 
-    client.send_and_confirm_transaction(&tx)?;
-
-    Ok(())
+    Ok(client.send_and_confirm_transaction(&tx)?)
 }
