@@ -1,7 +1,14 @@
 //! Module provide CLI arguments parser.
 
-use clap::{Parser, Subcommand};
+use clap::{ArgEnum, Parser, Subcommand};
 use solana_sdk::pubkey::Pubkey;
+
+#[derive(Debug, ArgEnum, Clone)]
+pub enum OrderStatusArg {
+    Created,
+    Canceled,
+    Completed,
+}
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
@@ -57,6 +64,13 @@ pub enum Commands {
     GetOrder {
         #[clap(short, long, help = "order address")]
         order: Pubkey,
+    },
+    GetOrdersHistory {
+        #[clap(short, long, help = "funder address")]
+        funder: Option<Pubkey>,
+
+        #[clap(short, long, arg_enum, help = "order status")]
+        status: Option<OrderStatusArg>,
     },
 }
 

@@ -29,40 +29,14 @@ fn main() -> Result<(), error::Error> {
         args::Commands::GetOrder { order } => {
             let pb = indicatif::ProgressBar::new_spinner();
             pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
-            pb.set_message("Creating order..");
+            pb.set_message("Obtaining order..");
 
+            let order_pubkey = order;
             let order = utils::get_order(&client, &order)?;
 
             pb.finish_and_clear();
 
-            let base_decimals = if order.is_base_native() {
-                9
-            } else {
-                utils::get_mint(&client, &order.base_mint)?.decimals
-            };
-            let quote_decimals = if order.is_quote_native() {
-                9
-            } else {
-                utils::get_mint(&client, &order.quote_mint)?.decimals
-            };
-
-            println!("status: {:?}", order.status);
-            println!(
-                "base_amount: {}",
-                spl_token::amount_to_ui_amount(order.base_amount, base_decimals)
-            );
-            println!(
-                "quote_amount: {}",
-                spl_token::amount_to_ui_amount(order.quote_amount, quote_decimals)
-            );
-            println!("base_mint: {}", order.base_mint);
-            println!("quote_mint: {}", order.quote_mint);
-            println!("funder: {}", order.funder);
-            println!("recipient: {}", order.recipient);
-            println!("escrow: {}", order.escrow);
-            println!("quote_token_account: {}", order.quote_token_account);
-            println!("start_date: {:?}", order.start_date);
-            println!("expire_date: {}", order.expire_date);
+            utils::print_order(&client, &order_pubkey, &order)?;
         }
         args::Commands::CreateOrder {
             recipient,
@@ -114,7 +88,7 @@ fn main() -> Result<(), error::Error> {
 
             pb.finish_and_clear();
 
-            println!("[+] New order: {}, tx: {}", order_pubkey, tx);
+            println!("[+] Order created: {}, tx: {}", order_pubkey, tx);
         }
         args::Commands::CancelOrder {
             order,
@@ -159,6 +133,34 @@ fn main() -> Result<(), error::Error> {
             pb.finish_and_clear();
 
             println!("[+] Order executed, tx: {}", tx);
+        }
+        args::Commands::GetOrdersHistory { funder, status } => {
+            let pb = indicatif::ProgressBar::new_spinner();
+            pb.enable_steady_tick(Duration::from_millis(120).as_millis() as u64);
+            pb.set_message("Obtaining orders history..");
+
+            let order_status = if let Some(status) = status {
+                match status {
+                    args::OrderStatusArg::Created => Some(p2swap::state::OrderStatus::Created),
+                    args::OrderStatusArg::Canceled => Some(p2swap::state::OrderStatus::Canceled),
+                    args::OrderStatusArg::Completed => Some(p2swap::state::OrderStatus::Created),
+                }
+            } else {
+                None
+            };
+
+            let orders = utils::get_orders_history(
+                &client,
+                &funder.unwrap_or(wallet.pubkey()),
+                order_status,
+            )?;
+
+            pb.finish_and_clear();
+
+            for (order_pubkey, order) in orders {
+                utils::print_order(&client, &order_pubkey, &order)?;
+                println!();
+            }
         }
     }
 

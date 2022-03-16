@@ -11,9 +11,9 @@ While `Order` creation, funder can set custom start / expire date, tokens rates 
 Protocol charge little % from each deal(from both sides). This amount is divided between p2swap token pool and devs. This can be changed later.
 
 ## On-chain program:
-| Cluster      | Address     |
-| ------------ | ----------- |
-| Mainnet Beta | p2sSQ51hNP1yiQKtZ81sDzWBM6tkaS2ZtMrgnbBhE4v |
+| Cluster      | Address                                     |
+| ------------ | ------------------------------------------- |
+| Mainnet Beta | _                                           |
 | Devnet       | p2sSQ51hNP1yiQKtZ81sDzWBM6tkaS2ZtMrgnbBhE4v |
 | Testnet      | p2sSQ51hNP1yiQKtZ81sDzWBM6tkaS2ZtMrgnbBhE4v |
 
